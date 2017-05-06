@@ -75,10 +75,70 @@ BalanceOutput.propTypes = {
   }).isRequired
 };
 
-export default connect(state => {
+export default connect((state) => {
   let balance = [];
 
-  /* YOUR CODE GOES HERE */
+  console.log(state.userInput.startAccount, state.userInput.endAccount);
+
+  /* create copies so start and end accounts are not mutated if the code below
+  is used */
+  let startAccount = state.userInput.startAccount;
+  let endAccount = state.userInput.endAccount;
+
+  /* set lowest and highest limits of accounts when a non-number is used
+  (parseInt in utils prevents '*' to be specified here. If only code should be
+  added here, then the following 2 lines should be used instead of the code in
+  utils.js) */
+  // if (Number.isNaN(startAccount)) startAccount = 0;
+  // if (Number.isNaN(endAccount)) endAccount = 9999;
+
+  /* filter the journal entries based on the criteria set by the user */
+  const filteredJournalEntries = state.journalEntries
+    .filter(entry => entry.PERIOD >= state.userInput.startPeriod &&
+      entry.PERIOD <= state.userInput.endPeriod &&
+      entry.ACCOUNT >= startAccount &&
+      entry.ACCOUNT <= endAccount);
+
+  filteredJournalEntries.forEach((entry) => {
+    /* create a copy of each entry so that the entries are not mutated */
+    const balanceEntry = { ...entry };
+
+    /* create a boolean that indicates whether an account is already in balance
+    or not */
+    let accountExists = false;
+
+    /* remove period so csv format does not show */
+    delete balanceEntry.PERIOD;
+
+    /* add description for each account in balance based on corresponding labels
+    in accounts data */
+    state.accounts.forEach((account) => {
+      if (account.ACCOUNT === balanceEntry.ACCOUNT) {
+        balanceEntry.DESCRIPTION = account.LABEL;
+      }
+    });
+
+    /* calculate balance of the account based on the difference between the
+    account credit and the debit */
+    balanceEntry.BALANCE = balanceEntry.CREDIT - balanceEntry.DEBIT;
+
+    /* if account already exists in balance, adjust total debit, credit, and
+    balance of that account */
+    balance.forEach((account) => {
+      if (account.ACCOUNT === balanceEntry.ACCOUNT) {
+        accountExists = true;
+        account.DEBIT += balanceEntry.DEBIT;
+        account.CREDIT += balanceEntry.CREDIT;
+        account.BALANCE += balanceEntry.BALANCE;
+      }
+    });
+
+    /* only add a new account if it doesn't already exist in balance */
+    if (!accountExists) balance.push(balanceEntry);
+  });
+
+  /* sort balance based on account numbers starting with lowest first */
+  balance = balance.sort((a, b) => a.ACCOUNT - b.ACCOUNT);
 
   const totalCredit = balance.reduce((acc, entry) => acc + entry.CREDIT, 0);
   const totalDebit = balance.reduce((acc, entry) => acc + entry.DEBIT, 0);

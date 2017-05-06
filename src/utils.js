@@ -38,15 +38,37 @@ export const parseCSV = str => {
 }
 
 export const toCSV = arr => {
-  let headers = Object.keys(arr[0]).join(';');
-  let lines = arr.map(obj => Object.values(obj).join(';'));
+  /* reorder to match CSV display order */
+  let headers = Object.keys(arr[0])
+  .slice(0, 1)
+  .concat(Object.keys(arr[0])
+  .slice(3, 4)
+  .concat(Object.keys(arr[0])
+  .slice(1, 3))
+  .concat(Object.keys(arr[0])
+  .slice(4)))
+  .join(';');
+  let lines = arr.map(obj => Object.values(obj)
+  .slice(0, 1)
+  .concat(Object.values(obj)
+  .slice(3, 4)
+  .concat(Object.values(obj)
+  .slice(1, 3))
+  .concat(Object.values(obj)
+  .slice(4)))
+  .join(';'));
   return [headers, ...lines].join(';\n');
 }
 
 export const parseUserInput = str => {
-  const [
+  let [
     startAccount, endAccount, startPeriod, endPeriod, format
   ] = str.split(' ');
+
+  /* create numerical limits on '*' here or else all inputs become NaN after
+  parseInt and can not be handled correctly in BalanceOutput.js */
+  if (startAccount === '*') startAccount = 0;
+  if (endAccount === '*') endAccount = 9999;
 
   return {
     startAccount: parseInt(startAccount, 10),
