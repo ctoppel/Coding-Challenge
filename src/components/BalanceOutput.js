@@ -78,8 +78,6 @@ BalanceOutput.propTypes = {
 export default connect((state) => {
   let balance = [];
 
-  console.log(state.userInput.startAccount, state.userInput.endAccount);
-
   /* create copies so start and end accounts are not mutated if the code below
   is used */
   let startAccount = state.userInput.startAccount;
